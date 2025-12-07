@@ -1,134 +1,405 @@
-Two-player game (Tic-Tac-Toe with AI)
-#include <bits/stdc++.h>
+Two-player game non AI
+#include <iostream>
+#include <vector>
 using namespace std;
 
-char boardTTT[3][3];
+int turn = 0;
+vector<int> board(9, 2);
+// 3-> player, 5->comp
+void display()
+{
+  cout << "\nBoard:\n";
+  for (int i = 0; i < 9; i++)
+  {
+    if (board[i] == 3)
+      cout << "X ";
+    else if (board[i] == 5)
+      cout << "O ";
+    else
+      cout << "B ";
 
-void initBoard() {
-    char c='1';
-    for(int i=0;i<3;i++)
-        for(int j=0;j<3;j++)
-            boardTTT[i][j]=c++;
+    if ((i + 1) % 3 == 0)
+      cout << endl;
+  }
+  cout << endl;
 }
-void printBoard() {
+
+void go(int x)
+{
+  if (turn % 2 == 0)
+    board[x] = 3;
+  else
+    board[x] = 5;
+  turn++;
+}
+
+int make2()
+{
+ 
+  if (board[4] == 2)
+    return 4;
+
+  
+  int corners[] = {0, 2, 6, 8};
+  for (int i = 0; i < 4; i++)
+  {
+    if (board[corners[i]] == 2)
+      return corners[i];
+  }
+
+  
+  int edges[] = {1, 3, 5, 7};
+  for (int i = 0; i < 4; i++)
+  {
+    if (board[edges[i]] == 2)
+      return edges[i];
+  }
+
+  return -1;
+}
+
+
+int poswin(int n)
+{
+  vector<vector<int>> w = {{0, 1, 2}, {0, 3, 6}, {0, 4, 8}, {1, 4, 7}, {2, 5, 8}, {2, 4, 6}, {3, 4, 5}, {6, 7, 8}};
+  if (n == 3)
+  {
+    for (int i = 0; i < 8; i++)
+    {
+      int prod = 1;
+      for (int j = 0; j < 3; j++)
+        prod *= board[w[i][j]];
+      if (prod == 18)
+      {
+        for (int j = 0; j < 3; j++)
+        {
+          if (board[w[i][j]] == 2)
+            return w[i][j];
+        }
+      }
+    }
+  }
+  else
+  {
+    for (int i = 0; i < 8; i++)
+    {
+      int prod = 1;
+      for (int j = 0; j < 3; j++)
+        prod *= board[w[i][j]];
+      if (prod == 50)
+      {
+        for (int j = 0; j < 3; j++)
+        {
+          if (board[w[i][j]] == 2)
+            return w[i][j];
+        }
+      }
+    }
+  }
+  return -1;
+}
+
+bool iswin(int n)
+{
+  vector<vector<int>> w = {{0, 1, 2}, {0, 3, 6}, {0, 4, 8}, {1, 4, 7}, {2, 5, 8}, {2, 4, 6}, {3, 4, 5}, {6, 7, 8}};
+  if (n == 3)
+  {
+    for (int i = 0; i < 8; i++)
+    {
+      int prod = 1;
+      for (int j = 0; j < 3; j++)
+        prod *= board[w[i][j]];
+      if (prod == 27)
+        return true;
+    }
+  }
+  else
+  {
+    for (int i = 0; i < 8; i++)
+    {
+      int prod = 1;
+      for (int j = 0; j < 3; j++)
+        prod *= board[w[i][j]];
+      if (prod == 125)
+        return true;
+    }
+  }
+  return false;
+}
+
+int main()
+{
+  int x, p, m;
+
+  cout << "Enter position for x: ";
+  cin >> x;
+  go(x);
+  display();
+
+  m = make2();
+  go(m);
+  display();
+
+  cout << "Enter position for x: ";
+  cin >> x;
+  go(x);
+  display();
+
+  p = poswin(3);
+  if (p != -1)
+    go(p);
+  else
+  {
+    m = make2();
+    go(m);
+  }
+  display();
+
+  cout << "Enter position for x: ";
+  cin >> x;
+  go(x);
+  display();
+
+  if (iswin(3))
+  {
+    cout << "You WIN!!!";
+    return 0;
+  }
+
+  p = poswin(5);
+  if (p != -1)
+  {
+    go(p);
+  }
+  else if (poswin(3) != -1)
+  {
+    go(poswin(3));
+  }
+  else
+  {
+    go(make2());
+  }
+  display();
+
+  if (iswin(5))
+  {
+    cout << "I WIN!!!";
+    return 0;
+  }
+
+  cout << "Enter position for x: ";
+  cin >> x;
+  go(x);
+  display();
+
+  if (iswin(3))
+  {
+    cout << "You WIN!!!";
+    return 0;
+  }
+
+  p = poswin(5);
+  if (p != -1)
+  {
+    go(p);
+  }
+  else if (poswin(3) != -1)
+  {
+    go(poswin(3));
+  }
+  else
+  {
+    go(make2());
+  }
+  display();
+
+  if (iswin(5))
+  {
+    cout << "I WIN!!!";
+    return 0;
+  }
+
+  cout << "Enter position for x: ";
+  cin >> x;
+  go(x);
+  display();
+
+  if (iswin(3))
+  {
+    cout << "You WIN!!!";
+    return 0;
+  }
+
+  cout << "DRAW!!!";
+  return 0;
+}
+
+1_2)  AI method for tic tac toe
+
+#include<bits/stdc++.h>
+using namespace std;
+
+const char HUMAN = 'X';
+const char AI = 'O';
+const char EMPTY = ' ';
+
+
+void displayBoard(const vector<char> &board)
+{
     cout << "\n";
-    for(int i=0;i<3;i++){
-        for(int j=0;j<3;j++){
-            cout << " " << boardTTT[i][j];
-            if(j<2) cout << " |";
-        }
-        cout << "\n";
-        if(i<2) cout << "---+---+---\n";
+    for (int i = 0; i < 9; i++)
+    {
+        cout << (board[i] == EMPTY ? char('0' + i) : board[i]) << " ";
+        if ((i + 1) % 3 == 0)
+            cout << "\n";
     }
     cout << "\n";
 }
-bool isMovesLeft() {
-    for(int i=0;i<3;i++)
-        for(int j=0;j<3;j++)
-            if(boardTTT[i][j] != 'X' && boardTTT[i][j] != 'O') return true;
-    return false;
+
+
+char checkWinner(const vector<char> &board)
+{
+    int winLines[8][3] = {
+        {0, 1, 2}, {3, 4, 5}, {6, 7, 8}, 
+        {0, 3, 6},
+        {1, 4, 7},
+        {2, 5, 8}, 
+        {0, 4, 8},
+        {2, 4, 6} 
+    };
+
+    for (auto &line : winLines)
+    {
+        if (board[line[0]] != EMPTY &&
+            board[line[0]] == board[line[1]] &&
+            board[line[1]] == board[line[2]])
+        {
+            return board[line[0]];
+        }
+    }
+
+    
+    for (char c : board)
+    {
+        if (c == EMPTY)
+            return EMPTY; 
+    }
+    return 'D'; 
 }
-int evaluate() {
-    for(int row=0;row<3;row++){
-        if(boardTTT[row][0]==boardTTT[row][1] && boardTTT[row][1]==boardTTT[row][2]){
-            if(boardTTT[row][0]=='O') return +10;
-            if(boardTTT[row][0]=='X') return -10;
+
+
+int minimax(vector<char> &board, bool isAI)
+{
+    char winner = checkWinner(board);
+    if (winner == AI)
+        return 10;
+    if (winner == HUMAN)
+        return -10;
+    if (winner == 'D')
+        return 0;
+
+    if (isAI)
+    {
+        int best = INT_MIN;
+        for (int i = 0; i < 9; i++)
+        {
+            if (board[i] == EMPTY)
+            {
+                board[i] = AI;
+                best = max(best, minimax(board, false));
+                board[i] = EMPTY;
+            }
+        }
+        return best;
+    }
+    else
+    {
+        int best =INT_MAX;
+        for (int i = 0; i < 9; i++)
+        {
+            if (board[i] == EMPTY)
+            {
+                board[i] = HUMAN;
+                best = min(best, minimax(board, true));
+                board[i] = EMPTY;
+            }
+        }
+        return best;
+    }
+}
+
+
+int findBestMove(vector<char> &board)
+{
+    int bestVal = INT_MIN;
+    int bestMove = -1;
+
+    for (int i = 0; i < 9; i++)
+    {
+        if (board[i] == EMPTY)
+        {
+            board[i] = AI;
+            int moveVal = minimax(board, false);
+            board[i] = EMPTY;
+
+            if (moveVal > bestVal)
+            {
+                bestMove = i;
+                bestVal = moveVal;
+            }
         }
     }
-    for(int col=0;col<3;col++){
-        if(boardTTT[0][col]==boardTTT[1][col] && boardTTT[1][col]==boardTTT[2][col]){
-            if(boardTTT[0][col]=='O') return +10;
-            if(boardTTT[0][col]=='X') return -10;
+    return bestMove;
+}
+
+int main()
+{
+    vector<char> board(9, EMPTY);
+    int move;
+    cout << "Player is X, AI is O\n";
+    displayBoard(board);
+
+    while (true)
+    {
+        
+        cout << "Enter your move (0-8): ";
+        cin >> move;
+       
+        board[move] = HUMAN;
+        displayBoard(board);
+
+        if (checkWinner(board) == HUMAN)
+        {
+            cout << "You WIN!!!\n";
+            break;
+        }
+        if (checkWinner(board) == 'D')
+        {
+            cout << "It's a DRAW!\n";
+            break;
+        }
+
+       
+        int aiMove = findBestMove(board);
+        board[aiMove] = AI;
+        cout << "AI chooses position " << aiMove << "\n";
+        displayBoard(board);
+
+        if (checkWinner(board) == AI)
+        {
+            cout << "AI WINS!!!\n";
+            break;
+        }
+        if (checkWinner(board) == 'D')
+        {
+            cout << "It's a DRAW!\n";
+            break;
         }
     }
-    if(boardTTT[0][0]==boardTTT[1][1] && boardTTT[1][1]==boardTTT[2][2]){
-        if(boardTTT[0][0]=='O') return +10;
-        if(boardTTT[0][0]=='X') return -10;
-    }
-    if(boardTTT[0][2]==boardTTT[1][1] && boardTTT[1][1]==boardTTT[2][0]){
-        if(boardTTT[0][2]=='O') return +10;
-        if(boardTTT[0][2]=='X') return -10;
-    }
+
     return 0;
 }
-int minimax(bool isMax) {
-    int score = evaluate();
-    if(score==10 || score==-10) return score;
-    if(!isMovesLeft()) return 0;
-    if(isMax){
-        int best = -1000;
-        for(int i=0;i<3;i++)
-            for(int j=0;j<3;j++)
-                if(boardTTT[i][j] != 'X' && boardTTT[i][j] != 'O'){
-                    char b = boardTTT[i][j];
-                    boardTTT[i][j] = 'O';
-                    best = max(best, minimax(false));
-                    boardTTT[i][j] = b;
-                }
-        return best;
-    } else {
-        int best = 1000;
-        for(int i=0;i<3;i++)
-            for(int j=0;j<3;j++)
-                if(boardTTT[i][j] != 'X' && boardTTT[i][j] != 'O'){
-                    char b = boardTTT[i][j];
-                    boardTTT[i][j] = 'X';
-                    best = min(best, minimax(true));
-                    boardTTT[i][j] = b;
-                }
-        return best;
-    }
-}
-pair<int,int> bestMove() {
-    int bestVal=-1000; pair<int,int> best={-1,-1};
-    for(int i=0;i<3;i++)
-        for(int j=0;j<3;j++)
-            if(boardTTT[i][j] != 'X' && boardTTT[i][j] != 'O'){
-                char b=boardTTT[i][j];
-                boardTTT[i][j]='O';
-                int val=minimax(false);
-                boardTTT[i][j]=b;
-                if(val>bestVal){ bestVal=val; best={i,j}; }
-            }
-    return best;
-}
-char winner() {
-    int s=evaluate();
-    if(s==10) return 'O';
-    if(s==-10) return 'X';
-    if(!isMovesLeft()) return 'D';
-    return 'N';
-}
-int main() {
-    int mode;
-    cout<<"1. Two-player  2. Vs AI\nEnter choice: ";
-    cin>>mode;
-    initBoard();
-    char turn='X';
-    while(true){
-        printBoard();
-        char w=winner();
-        if(w=='X'){ cout<<"X wins\n";break; }
-        if(w=='O'){ cout<<"O wins\n";break; }
-        if(w=='D'){ cout<<"Draw\n";break; }
-        if(mode==1 || (mode==2 && turn=='X')){
-            int cell;
-            cout<<"Player "<<turn<<" enter cell (1-9): ";
-            cin>>cell; cell--;
-            int r=cell/3,c=cell%3;
-            if(cell<0||cell>8||boardTTT[r][c]=='X'||boardTTT[r][c]=='O'){
-                cout<<"Invalid move\n";continue;
-            }
-            boardTTT[r][c]=turn;
-        }else{
-            cout<<"AI playing O...\n";
-            auto mv=bestMove();
-            boardTTT[mv.first][mv.second]='O';
-        }
-        turn = (turn=='X')?'O':'X';
-    }
-    return 0;
-}
+
 
 2) BFS Water-Jar
 #include <bits/stdc++.h>
