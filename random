@@ -1,0 +1,1473 @@
+Two-player game (Tic-Tac-Toe with AI)
+#include <bits/stdc++.h>
+using namespace std;
+
+char boardTTT[3][3];
+
+void initBoard() {
+    char c='1';
+    for(int i=0;i<3;i++)
+        for(int j=0;j<3;j++)
+            boardTTT[i][j]=c++;
+}
+void printBoard() {
+    cout << "\n";
+    for(int i=0;i<3;i++){
+        for(int j=0;j<3;j++){
+            cout << " " << boardTTT[i][j];
+            if(j<2) cout << " |";
+        }
+        cout << "\n";
+        if(i<2) cout << "---+---+---\n";
+    }
+    cout << "\n";
+}
+bool isMovesLeft() {
+    for(int i=0;i<3;i++)
+        for(int j=0;j<3;j++)
+            if(boardTTT[i][j] != 'X' && boardTTT[i][j] != 'O') return true;
+    return false;
+}
+int evaluate() {
+    for(int row=0;row<3;row++){
+        if(boardTTT[row][0]==boardTTT[row][1] && boardTTT[row][1]==boardTTT[row][2]){
+            if(boardTTT[row][0]=='O') return +10;
+            if(boardTTT[row][0]=='X') return -10;
+        }
+    }
+    for(int col=0;col<3;col++){
+        if(boardTTT[0][col]==boardTTT[1][col] && boardTTT[1][col]==boardTTT[2][col]){
+            if(boardTTT[0][col]=='O') return +10;
+            if(boardTTT[0][col]=='X') return -10;
+        }
+    }
+    if(boardTTT[0][0]==boardTTT[1][1] && boardTTT[1][1]==boardTTT[2][2]){
+        if(boardTTT[0][0]=='O') return +10;
+        if(boardTTT[0][0]=='X') return -10;
+    }
+    if(boardTTT[0][2]==boardTTT[1][1] && boardTTT[1][1]==boardTTT[2][0]){
+        if(boardTTT[0][2]=='O') return +10;
+        if(boardTTT[0][2]=='X') return -10;
+    }
+    return 0;
+}
+int minimax(bool isMax) {
+    int score = evaluate();
+    if(score==10 || score==-10) return score;
+    if(!isMovesLeft()) return 0;
+    if(isMax){
+        int best = -1000;
+        for(int i=0;i<3;i++)
+            for(int j=0;j<3;j++)
+                if(boardTTT[i][j] != 'X' && boardTTT[i][j] != 'O'){
+                    char b = boardTTT[i][j];
+                    boardTTT[i][j] = 'O';
+                    best = max(best, minimax(false));
+                    boardTTT[i][j] = b;
+                }
+        return best;
+    } else {
+        int best = 1000;
+        for(int i=0;i<3;i++)
+            for(int j=0;j<3;j++)
+                if(boardTTT[i][j] != 'X' && boardTTT[i][j] != 'O'){
+                    char b = boardTTT[i][j];
+                    boardTTT[i][j] = 'X';
+                    best = min(best, minimax(true));
+                    boardTTT[i][j] = b;
+                }
+        return best;
+    }
+}
+pair<int,int> bestMove() {
+    int bestVal=-1000; pair<int,int> best={-1,-1};
+    for(int i=0;i<3;i++)
+        for(int j=0;j<3;j++)
+            if(boardTTT[i][j] != 'X' && boardTTT[i][j] != 'O'){
+                char b=boardTTT[i][j];
+                boardTTT[i][j]='O';
+                int val=minimax(false);
+                boardTTT[i][j]=b;
+                if(val>bestVal){ bestVal=val; best={i,j}; }
+            }
+    return best;
+}
+char winner() {
+    int s=evaluate();
+    if(s==10) return 'O';
+    if(s==-10) return 'X';
+    if(!isMovesLeft()) return 'D';
+    return 'N';
+}
+int main() {
+    int mode;
+    cout<<"1. Two-player  2. Vs AI\nEnter choice: ";
+    cin>>mode;
+    initBoard();
+    char turn='X';
+    while(true){
+        printBoard();
+        char w=winner();
+        if(w=='X'){ cout<<"X wins\n";break; }
+        if(w=='O'){ cout<<"O wins\n";break; }
+        if(w=='D'){ cout<<"Draw\n";break; }
+        if(mode==1 || (mode==2 && turn=='X')){
+            int cell;
+            cout<<"Player "<<turn<<" enter cell (1-9): ";
+            cin>>cell; cell--;
+            int r=cell/3,c=cell%3;
+            if(cell<0||cell>8||boardTTT[r][c]=='X'||boardTTT[r][c]=='O'){
+                cout<<"Invalid move\n";continue;
+            }
+            boardTTT[r][c]=turn;
+        }else{
+            cout<<"AI playing O...\n";
+            auto mv=bestMove();
+            boardTTT[mv.first][mv.second]='O';
+        }
+        turn = (turn=='X')?'O':'X';
+    }
+    return 0;
+}
+
+2) BFS Water-Jar
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State { int x,y; }; // x in 4L jar, y in 3L jar
+
+bool valid(int x,int y){ return x>=0&&x<=4&&y>=0&&y<=3; }
+
+int main(){
+    queue<State> q;
+    map<pair<int,int>, pair<int,int>> parent;
+    map<pair<int,int>, string> moveName;
+    set<pair<int,int>> vis;
+    State start{0,0};
+    q.push(start);
+    vis.insert({0,0});
+    parent[{0,0}]={-1,-1};
+    while(!q.empty()){
+        State s=q.front(); q.pop();
+        if(s.x==2 || s.y==2){
+            vector<pair<int,int>> path;
+            pair<int,int> cur={s.x,s.y};
+            while(cur.first!=-1){
+                path.push_back(cur);
+                cur=parent[cur];
+            }
+            reverse(path.begin(),path.end());
+            cout<<"BFS Water-Jar path:\n";
+            for(auto &p:path) cout<<"("<<p.first<<","<<p.second<<")\n";
+            return 0;
+        }
+        int x=s.x,y=s.y;
+        vector<pair<State,string>> next;
+        next.push_back({{4,y},"Fill X"});
+        next.push_back({{x,3},"Fill Y"});
+        next.push_back({{0,y},"Empty X"});
+        next.push_back({{x,0},"Empty Y"});
+        int pour=min(x,3-y);
+        next.push_back({{x-pour,y+pour},"X->Y"});
+        pour=min(y,4-x);
+        next.push_back({{x+pour,y-pour},"Y->X"});
+        for(auto &n:next){
+            int nx=n.first.x, ny=n.first.y;
+            if(!valid(nx,ny)) continue;
+            if(!vis.count({nx,ny})){
+                vis.insert({nx,ny});
+                q.push({nx,ny});
+                parent[{nx,ny}]={x,y};
+                moveName[{nx,ny}]=n.second;
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+3) BFS 8-Puzzle
+#include <bits/stdc++.h>
+using namespace std;
+
+string goal = "123456780";
+
+vector<string> neighbors(const string &s){
+    vector<string> res;
+    int z = s.find('0');
+    int r=z/3,c=z%3;
+    int dr[4]={-1,1,0,0},dc[4]={0,0,-1,1};
+    for(int k=0;k<4;k++){
+        int nr=r+dr[k],nc=c+dc[k];
+        if(nr<0||nr>=3||nc<0||nc>=3) continue;
+        string t=s;
+        swap(t[z],t[nr*3+nc]);
+        res.push_back(t);
+    }
+    return res;
+}
+
+int main(){
+    string start;
+    cout<<"Enter start state (9 digits, 0 as blank e.g. 125340678): ";
+    cin>>start;
+    queue<string> q;
+    map<string,string> parent;
+    set<string> vis;
+    q.push(start); vis.insert(start); parent[start]="#";
+    while(!q.empty()){
+        string cur=q.front(); q.pop();
+        if(cur==goal){
+            vector<string> path;
+            string t=cur;
+            while(t!="#"){ path.push_back(t); t=parent[t]; }
+            reverse(path.begin(),path.end());
+            cout<<"BFS 8-puzzle steps:\n";
+            for(auto &s:path){
+                cout<<s.substr(0,3)<<"\n"<<s.substr(3,3)<<"\n"<<s.substr(6,3)<<"\n\n";
+            }
+            return 0;
+        }
+        for(auto &n:neighbors(cur)){
+            if(!vis.count(n)){
+                vis.insert(n);
+                parent[n]=cur;
+                q.push(n);
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+4) BFS Maze
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Node{int x,y;};
+int main(){
+    int n,m; 
+    cout<<"Enter rows cols: ";
+    cin>>n>>m;
+    vector<string> grid(n);
+    cout<<"Enter maze ('.' free, '#' wall):\n";
+    for(int i=0;i<n;i++) cin>>grid[i];
+    int sx,sy,gx,gy;
+    cout<<"Start x y: "; cin>>sx>>sy;
+    cout<<"Goal x y: "; cin>>gx>>gy;
+    vector<vector<bool>> vis(n,vector<bool>(m,false));
+    vector<vector<pair<int,int>>> par(n,vector<pair<int,int>>(m,{-1,-1}));
+    queue<Node> q;
+    q.push({sx,sy}); vis[sx][sy]=true;
+    int dx[4]={-1,1,0,0}, dy[4]={0,0,-1,1};
+    while(!q.empty()){
+        auto cur=q.front(); q.pop();
+        if(cur.x==gx && cur.y==gy){
+            vector<pair<int,int>> path;
+            int x=gx,y=gy;
+            while(x!=-1){
+                path.push_back({x,y});
+                auto p=par[x][y]; x=p.first; y=p.second;
+            }
+            reverse(path.begin(),path.end());
+            cout<<"BFS Maze path:\n";
+            for(auto &p:path) cout<<"("<<p.first<<","<<p.second<<")\n";
+            return 0;
+        }
+        for(int k=0;k<4;k++){
+            int nx=cur.x+dx[k], ny=cur.y+dy[k];
+            if(nx>=0&&ny>=0&&nx<n&&ny<m&&grid[nx][ny]!='#'&&!vis[nx][ny]){
+                vis[nx][ny]=true;
+                par[nx][ny]={cur.x,cur.y};
+                q.push({nx,ny});
+            }
+        }
+    }
+    cout<<"No path\n";
+    return 0;
+}
+
+5) BFS Missionaries-Cannibals
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{int M,C,B;}; // B=0 left,1 right
+
+bool valid(int M,int C){
+    int MR=3-M,CR=3-C;
+    if(M<0||C<0||M>3||C>3) return false;
+    if(M>0 && C>M) return false;
+    if(MR>0 && CR>MR) return false;
+    return true;
+}
+string key(State s){ return to_string(s.M)+to_string(s.C)+to_string(s.B); }
+
+int main(){
+    State start{3,3,0}, goal{0,0,1};
+    queue<State> q;
+    map<string,string> parent;
+    map<string,string> move;
+    set<string> vis;
+    q.push(start); vis.insert(key(start)); parent[key(start)]="#";
+    vector<pair<int,int>> moves={{1,0},{2,0},{0,1},{0,2},{1,1}};
+    while(!q.empty()){
+        State s=q.front(); q.pop();
+        if(s.M==goal.M && s.C==goal.C && s.B==goal.B){
+            vector<string> path;
+            string k=key(s);
+            while(k!="#"){ path.push_back(k); k=parent[k]; }
+            reverse(path.begin(),path.end());
+            cout<<"BFS M-C states (M_left,C_left,B):\n";
+            for(string st:path){
+                cout<<st[0]<<" "<<st[1]<<" "<<st[2]<<"\n";
+            }
+            return 0;
+        }
+        int sign = (s.B==0)?-1:1;
+        for(auto mv:moves){
+            int nM = s.M + sign*mv.first;
+            int nC = s.C + sign*mv.second;
+            int nB = 1-s.B;
+            if(!valid(nM,nC)) continue;
+            State ns{nM,nC,nB};
+            string k=key(ns);
+            if(!vis.count(k)){
+                vis.insert(k);
+                parent[k]=key(s);
+                q.push(ns);
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+6) BFS 8-Queens (level-by-level placement)
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{vector<int> col;}; // col[row]=col index
+
+bool safe(const vector<int>&col,int row,int c){
+    for(int r=0;r<row;r++){
+        if(col[r]==c) return false;
+        if(abs(col[r]-c)==abs(r-row)) return false;
+    }
+    return true;
+}
+
+int main(){
+    queue<State> q;
+    q.push({{}});
+    while(!q.empty()){
+        State s=q.front(); q.pop();
+        int row = s.col.size();
+        if(row==8){
+            cout<<"BFS 8-Queens solution (row:col):\n";
+            for(int i=0;i<8;i++) cout<<i<<" : "<<s.col[i]<<"\n";
+            return 0;
+        }
+        for(int c=0;c<8;c++){
+            if(safe(s.col,row,c)){
+                State ns=s;
+                ns.col.push_back(c);
+                q.push(ns);
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+7) DFS Water-Jar
+#include <bits/stdc++.h>
+using namespace std;
+struct State{int x,y;};
+bool vis[5][4];
+
+bool valid(int x,int y){ return x>=0&&x<=4&&y>=0&&y<=3; }
+bool dfs(State s){
+    if(s.x==2 || s.y==2){
+        cout<<"Goal: ("<<s.x<<","<<s.y<<")\n";
+        return true;
+    }
+    vis[s.x][s.y]=true;
+    int x=s.x,y=s.y;
+    vector<State> nxt;
+    nxt.push_back({4,y});
+    nxt.push_back({x,3});
+    nxt.push_back({0,y});
+    nxt.push_back({x,0});
+    int pour=min(x,3-y);
+    nxt.push_back({x-pour,y+pour});
+    pour=min(y,4-x);
+    nxt.push_back({x+pour,y-pour});
+    for(auto n:nxt){
+        if(valid(n.x,n.y) && !vis[n.x][n.y]){
+            cout<<"("<<n.x<<","<<n.y<<")\n";
+            if(dfs(n)) return true;
+        }
+    }
+    return false;
+}
+int main(){
+    memset(vis,false,sizeof(vis));
+    cout<<"Start (0,0)\n";
+    if(!dfs({0,0})) cout<<"No solution\n";
+    return 0;
+}
+
+8) DFS 8-Puzzle
+#include <bits/stdc++.h>
+using namespace std;
+
+string goal="123456780";
+set<string> vis;
+
+vector<string> neighbors(const string &s){
+    vector<string> res;
+    int z=s.find('0');
+    int r=z/3,c=z%3;
+    int dr[4]={-1,1,0,0}, dc[4]={0,0,-1,1};
+    for(int k=0;k<4;k++){
+        int nr=r+dr[k],nc=c+dc[k];
+        if(nr<0||nr>=3||nc<0||nc>=3) continue;
+        string t=s;
+        swap(t[z],t[nr*3+nc]);
+        res.push_back(t);
+    }
+    return res;
+}
+
+bool dfs(const string &s,int depth){
+    if(depth>25) return false;
+    cout<<"Depth "<<depth<<": "<<s<<"\n";
+    if(s==goal) return true;
+    vis.insert(s);
+    for(auto &n:neighbors(s)){
+        if(!vis.count(n)){
+            if(dfs(n,depth+1)) return true;
+        }
+    }
+    return false;
+}
+int main(){
+    string start;
+    cout<<"Enter start state: ";
+    cin>>start;
+    if(!dfs(start,0)) cout<<"No solution (limited depth)\n";
+    return 0;
+}
+
+9) DFS Maze
+#include <bits/stdc++.h>
+using namespace std;
+
+int n,m;
+vector<string> g;
+vector<vector<bool>> vis;
+int gx,gy;
+int dx[4]={-1,1,0,0}, dy[4]={0,0,-1,1};
+
+bool dfs(int x,int y){
+    if(x==gx && y==gy){
+        cout<<"Reached ("<<x<<","<<y<<")\n";
+        return true;
+    }
+    vis[x][y]=true;
+    cout<<"("<<x<<","<<y<<")\n";
+    for(int k=0;k<4;k++){
+        int nx=x+dx[k],ny=y+dy[k];
+        if(nx>=0&&ny>=0&&nx<n&&ny<m&&g[nx][ny]!='#'&&!vis[nx][ny]){
+            if(dfs(nx,ny)) return true;
+        }
+    }
+    return false;
+}
+
+int main(){
+    int sx,sy;
+    cout<<"Enter n m: ";cin>>n>>m;
+    g.resize(n);
+    cout<<"Enter maze:\n";
+    for(int i=0;i<n;i++) cin>>g[i];
+    cout<<"Start x y: ";cin>>sx>>sy;
+    cout<<"Goal x y: ";cin>>gx>>gy;
+    vis.assign(n,vector<bool>(m,false));
+    if(!dfs(sx,sy)) cout<<"No path\n";
+    return 0;
+}
+
+10) DFS Missionaries-Cannibals
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{int M,C,B;};
+set<string> vis;
+
+bool valid(int M,int C){
+    int MR=3-M,CR=3-C;
+    if(M<0||C<0||M>3||C>3) return false;
+    if(M>0 && C>M) return false;
+    if(MR>0 && CR>MR) return false;
+    return true;
+}
+string key(State s){return to_string(s.M)+to_string(s.C)+to_string(s.B);}
+
+bool dfs(State s,int depth){
+    cout<<"Depth "<<depth<<" -> "<<s.M<<","<<s.C<<","<<s.B<<"\n";
+    if(s.M==0 && s.C==0 && s.B==1) return true;
+    if(depth>20) return false;
+    vis.insert(key(s));
+    vector<pair<int,int>> moves={{1,0},{2,0},{0,1},{0,2},{1,1}};
+    int sign=(s.B==0)?-1:1;
+    for(auto mv:moves){
+        State ns{s.M+sign*mv.first,s.C+sign*mv.second,1-s.B};
+        if(valid(ns.M,ns.C) && !vis.count(key(ns))){
+            if(dfs(ns,depth+1)) return true;
+        }
+    }
+    return false;
+}
+
+int main(){
+    State start{3,3,0};
+    if(!dfs(start,0)) cout<<"No solution\n";
+    return 0;
+}
+
+11) DFS 8-Queens
+#include <bits/stdc++.h>
+using namespace std;
+
+int col[8];
+bool safe(int r,int c){
+    for(int i=0;i<r;i++){
+        if(col[i]==c) return false;
+        if(abs(col[i]-c)==abs(i-r)) return false;
+    }
+    return true;
+}
+bool dfs(int r){
+    if(r==8){
+        cout<<"DFS 8-Queens solution (row:col)\n";
+        for(int i=0;i<8;i++) cout<<i<<" : "<<col[i]<<"\n";
+        return true;
+    }
+    for(int c=0;c<8;c++){
+        if(safe(r,c)){
+            col[r]=c;
+            if(dfs(r+1)) return true;
+        }
+    }
+    return false;
+}
+int main(){
+    if(!dfs(0)) cout<<"No solution\n";
+    return 0;
+}
+
+12) DLS Water-Jar (depth=3)
+#include <bits/stdc++.h>
+using namespace std;
+struct State{int x,y;};
+bool vis[5][4];
+bool valid(int x,int y){return x>=0&&x<=4&&y>=0&&y<=3;}
+
+bool dls(State s,int depth,int limit){
+    cout<<"Depth "<<depth<<": ("<<s.x<<","<<s.y<<")\n";
+    if(s.x==2 || s.y==2) return true;
+    if(depth==limit) return false;
+    vis[s.x][s.y]=true;
+    int x=s.x,y=s.y;
+    vector<State> nxt;
+    nxt.push_back({4,y});
+    nxt.push_back({x,3});
+    nxt.push_back({0,y});
+    nxt.push_back({x,0});
+    int pour=min(x,3-y);
+    nxt.push_back({x-pour,y+pour});
+    pour=min(y,4-x);
+    nxt.push_back({x+pour,y-pour});
+    for(auto n:nxt){
+        if(valid(n.x,n.y) && !vis[n.x][n.y]){
+            if(dls(n,depth+1,limit)) return true;
+        }
+    }
+    return false;
+}
+
+int main(){
+    memset(vis,false,sizeof(vis));
+    if(!dls({0,0},0,3)) cout<<"No solution within depth 3\n";
+    return 0;
+}
+
+13) DLS 8-Puzzle (depth=3)
+#include <bits/stdc++.h>
+using namespace std;
+
+string goal="123456780";
+set<string> vis;
+
+vector<string> neighbors(const string &s){
+    vector<string> res;
+    int z=s.find('0');
+    int r=z/3,c=z%3;
+    int dr[4]={-1,1,0,0},dc[4]={0,0,-1,1};
+    for(int k=0;k<4;k++){
+        int nr=r+dr[k],nc=c+dc[k];
+        if(nr<0||nr>=3||nc<0||nc>=3) continue;
+        string t=s;
+        swap(t[z],t[nr*3+nc]);
+        res.push_back(t);
+    }
+    return res;
+}
+
+bool dls(const string &s,int depth,int limit){
+    cout<<"Depth "<<depth<<": "<<s<<"\n";
+    if(s==goal) return true;
+    if(depth==limit) return false;
+    vis.insert(s);
+    for(auto &n:neighbors(s)){
+        if(!vis.count(n)){
+            if(dls(n,depth+1,limit)) return true;
+        }
+    }
+    return false;
+}
+
+int main(){
+    string start;
+    cout<<"Enter start: ";
+    cin>>start;
+    if(!dls(start,0,3)) cout<<"No solution within depth 3\n";
+    return 0;
+}
+
+14) DLS Maze (depth=3)
+#include <bits/stdc++.h>
+using namespace std;
+
+int n,m,gx,gy;
+vector<string> g;
+vector<vector<bool>> vis;
+int dx[4]={-1,1,0,0},dy[4]={0,0,-1,1};
+
+bool dls(int x,int y,int depth,int limit){
+    cout<<"Depth "<<depth<<": ("<<x<<","<<y<<")\n";
+    if(x==gx && y==gy) return true;
+    if(depth==limit) return false;
+    vis[x][y]=true;
+    for(int k=0;k<4;k++){
+        int nx=x+dx[k],ny=y+dy[k];
+        if(nx>=0&&ny>=0&&nx<n&&ny<m&&g[nx][ny]!='#'&&!vis[nx][ny]){
+            if(dls(nx,ny,depth+1,limit)) return true;
+        }
+    }
+    return false;
+}
+
+int main(){
+    int sx,sy;
+    cout<<"Enter n m: ";cin>>n>>m;
+    g.resize(n);
+    cout<<"Enter maze:\n";
+    for(int i=0;i<n;i++) cin>>g[i];
+    cout<<"Start x y: ";cin>>sx>>sy;
+    cout<<"Goal x y: ";cin>>gx>>gy;
+    vis.assign(n,vector<bool>(m,false));
+    if(!dls(sx,sy,0,3)) cout<<"No path within depth 3\n";
+    return 0;
+}
+
+15) DLS Missionaries-Cannibals (depth=3)
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{int M,C,B;};
+set<string> vis;
+bool valid(int M,int C){
+    int MR=3-M,CR=3-C;
+    if(M<0||C<0||M>3||C>3) return false;
+    if(M>0 && C>M) return false;
+    if(MR>0 && CR>MR) return false;
+    return true;
+}
+string key(State s){return to_string(s.M)+to_string(s.C)+to_string(s.B);}
+
+bool dls(State s,int depth,int limit){
+    cout<<"Depth "<<depth<<": "<<s.M<<","<<s.C<<","<<s.B<<"\n";
+    if(s.M==0 && s.C==0 && s.B==1) return true;
+    if(depth==limit) return false;
+    vis.insert(key(s));
+    vector<pair<int,int>> moves={{1,0},{2,0},{0,1},{0,2},{1,1}};
+    int sign=(s.B==0)?-1:1;
+    for(auto mv:moves){
+        State ns{s.M+sign*mv.first,s.C+sign*mv.second,1-s.B};
+        if(valid(ns.M,ns.C) && !vis.count(key(ns))){
+            if(dls(ns,depth+1,limit)) return true;
+        }
+    }
+    return false;
+}
+
+int main(){
+    State start{3,3,0};
+    if(!dls(start,0,3)) cout<<"No solution within depth 3\n";
+    return 0;
+}
+
+16) DLS 8-Queens (depth=3)
+#include <bits/stdc++.h>
+using namespace std;
+
+int col[8];
+bool safe(int r,int c){
+    for(int i=0;i<r;i++){
+        if(col[i]==c) return false;
+        if(abs(col[i]-c)==abs(i-r)) return false;
+    }
+    return true;
+}
+bool dls(int r,int limit){
+    for(int i=0;i<r;i++) cout<<col[i]<<" ";
+    cout<<" (row="<<r<<")\n";
+    if(r==8) return true;
+    if(r==limit) return false;
+    for(int c=0;c<8;c++){
+        if(safe(r,c)){
+            col[r]=c;
+            if(dls(r+1,limit)) return true;
+        }
+    }
+    return false;
+}
+int main(){
+    if(!dls(0,3)) cout<<"No full solution within depth 3 (partial search)\n";
+    return 0;
+}
+
+17) BestFS Water-Jar
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{int x,y;};
+int h(State s){ return min(abs(s.x-2),abs(s.y-2)); }
+
+int main(){
+    auto valid=[](int x,int y){return x>=0&&x<=4&&y>=0&&y<=3;};
+    struct Node{State s;int h;};
+    auto cmp=[](const Node&a,const Node&b){return a.h>b.h;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    map<pair<int,int>,pair<int,int>> parent;
+    set<pair<int,int>> vis;
+    State start{0,0};
+    pq.push({start,h(start)});
+    parent[{0,0}]={-1,-1};
+    while(!pq.empty()){
+        auto cur=pq.top().s; pq.pop();
+        if(vis.count({cur.x,cur.y})) continue;
+        vis.insert({cur.x,cur.y});
+        if(cur.x==2 || cur.y==2){
+            vector<pair<int,int>> path;
+            pair<int,int> p={cur.x,cur.y};
+            while(p.first!=-1){
+                path.push_back(p);
+                p=parent[p];
+            }
+            reverse(path.begin(),path.end());
+            cout<<"BestFS Water-Jar path:\n";
+            for(auto &st:path) cout<<"("<<st.first<<","<<st.second<<")\n";
+            return 0;
+        }
+        int x=cur.x,y=cur.y;
+        vector<State> nxt;
+        nxt.push_back({4,y});
+        nxt.push_back({x,3});
+        nxt.push_back({0,y});
+        nxt.push_back({x,0});
+        int pour=min(x,3-y);
+        nxt.push_back({x-pour,y+pour});
+        pour=min(y,4-x);
+        nxt.push_back({x+pour,y-pour});
+        for(auto ns:nxt){
+            if(!valid(ns.x,ns.y)) continue;
+            if(!vis.count({ns.x,ns.y})){
+                parent[{ns.x,ns.y}]={x,y};
+                pq.push({ns,h(ns)});
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+18) BestFS 8-Puzzle
+#include <bits/stdc++.h>
+using namespace std;
+
+string goal="123456780";
+int h(const string &s){
+    int d=0;
+    for(int i=0;i<9;i++){
+        if(s[i]=='0') continue;
+        int v=s[i]-'1';
+        int r=i/3,c=i%3;
+        int gr=v/3,gc=v%3;
+        d+=abs(r-gr)+abs(c-gc);
+    }
+    return d;
+}
+vector<string> neighbors(const string &s){
+    vector<string> res;
+    int z=s.find('0');
+    int r=z/3,c=z%3;
+    int dr[4]={-1,1,0,0},dc[4]={0,0,-1,1};
+    for(int k=0;k<4;k++){
+        int nr=r+dr[k],nc=c+dc[k];
+        if(nr<0||nr>=3||nc<0||nc>=3) continue;
+        string t=s;
+        swap(t[z],t[nr*3+nc]);
+        res.push_back(t);
+    }
+    return res;
+}
+int main(){
+    string start; cout<<"Enter start: ";cin>>start;
+    struct Node{string s;int h;};
+    auto cmp=[](const Node&a,const Node&b){return a.h>b.h;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    map<string,string> parent;
+    set<string> vis;
+    pq.push({start,h(start)}); parent[start]="#";
+    while(!pq.empty()){
+        auto cur=pq.top().s; pq.pop();
+        if(vis.count(cur)) continue;
+        vis.insert(cur);
+        if(cur==goal){
+            vector<string> path; string t=cur;
+            while(t!="#"){path.push_back(t);t=parent[t];}
+            reverse(path.begin(),path.end());
+            cout<<"BestFS 8-puzzle steps:\n";
+            for(auto &s:path){
+                cout<<s.substr(0,3)<<"\n"<<s.substr(3,3)<<"\n"<<s.substr(6,3)<<"\n\n";
+            }
+            return 0;
+        }
+        for(auto &n:neighbors(cur)){
+            if(!vis.count(n)){
+                parent[n]=cur;
+                pq.push({n,h(n)});
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+19) BestFS Maze
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Node{int x,y;};
+int main(){
+    int n,m;cin>>n>>m;
+    vector<string> g(n);
+    for(int i=0;i<n;i++) cin>>g[i];
+    int sx,sy,gx,gy;
+    cin>>sx>>sy>>gx>>gy;
+    auto h=[&](int x,int y){return abs(x-gx)+abs(y-gy);};
+    struct N{int x,y,h;};
+    auto cmp=[](const N&a,const N&b){return a.h>b.h;};
+    priority_queue<N,vector<N>,decltype(cmp)> pq(cmp);
+    vector<vector<bool>> vis(n,vector<bool>(m,false));
+    vector<vector<pair<int,int>>> par(n,vector<pair<int,int>>(m,{-1,-1}));
+    pq.push({sx,sy,h(sx,sy)});
+    int dx[4]={-1,1,0,0},dy[4]={0,0,-1,1};
+    while(!pq.empty()){
+        auto cur=pq.top();pq.pop();
+        if(vis[cur.x][cur.y]) continue;
+        vis[cur.x][cur.y]=true;
+        if(cur.x==gx && cur.y==gy){
+            vector<pair<int,int>> path;
+            int x=gx,y=gy;
+            while(x!=-1){
+                path.push_back({x,y});
+                auto p=par[x][y];x=p.first;y=p.second;
+            }
+            reverse(path.begin(),path.end());
+            cout<<"BestFS Maze path:\n";
+            for(auto &p:path) cout<<"("<<p.first<<","<<p.second<<")\n";
+            return 0;
+        }
+        for(int k=0;k<4;k++){
+            int nx=cur.x+dx[k],ny=cur.y+dy[k];
+            if(nx>=0&&ny>=0&&nx<n&&ny<m&&g[nx][ny]!='#'&&!vis[nx][ny]){
+                par[nx][ny]={cur.x,cur.y};
+                pq.push({nx,ny,h(nx,ny)});
+            }
+        }
+    }
+    cout<<"No path\n";
+    return 0;
+}
+
+20) BestFS Missionaries-Cannibals
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{int M,C,B;};
+bool valid(int M,int C){
+    int MR=3-M,CR=3-C;
+    if(M<0||C<0||M>3||C>3) return false;
+    if(M>0 && C>M) return false;
+    if(MR>0 && CR>MR) return false;
+    return true;
+}
+string key(State s){return to_string(s.M)+to_string(s.C)+to_string(s.B);}
+int h(State s){ return s.M + s.C; }
+
+int main(){
+    struct N{State s;int h;};
+    auto cmp=[](const N&a,const N&b){return a.h>b.h;};
+    priority_queue<N,vector<N>,decltype(cmp)> pq(cmp);
+    map<string,string> parent;
+    set<string> vis;
+    State start{3,3,0},goal{0,0,1};
+    pq.push({start,h(start)});
+    parent[key(start)]="#";
+    vector<pair<int,int>> moves={{1,0},{2,0},{0,1},{0,2},{1,1}};
+    while(!pq.empty()){
+        auto cur=pq.top().s;pq.pop();
+        string ck=key(cur);
+        if(vis.count(ck)) continue;
+        vis.insert(ck);
+        if(cur.M==goal.M && cur.C==goal.C && cur.B==goal.B){
+            vector<string> path; string t=ck;
+            while(t!="#"){path.push_back(t);t=parent[t];}
+            reverse(path.begin(),path.end());
+            cout<<"BestFS M-C states M,C,B:\n";
+            for(auto &s:path) cout<<s[0]<<" "<<s[1]<<" "<<s[2]<<"\n";
+            return 0;
+        }
+        int sign=(cur.B==0)?-1:1;
+        for(auto mv:moves){
+            State ns{cur.M+sign*mv.first,cur.C+sign*mv.second,1-cur.B};
+            if(!valid(ns.M,ns.C)) continue;
+            string nk=key(ns);
+            if(!vis.count(nk)){
+                parent[nk]=ck;
+                pq.push({ns,h(ns)});
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+21) BestFS 8-Queens
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{vector<int> col;};
+bool safe(const vector<int>&col,int r,int c){
+    for(int i=0;i<r;i++){
+        if(col[i]==c) return false;
+        if(abs(col[i]-c)==abs(i-r)) return false;
+    }
+    return true;
+}
+int h(const State&s){ return 8 - (int)s.col.size(); }
+
+int main(){
+    struct N{State s;int h;};
+    auto cmp=[](const N&a,const N&b){return a.h>b.h;};
+    priority_queue<N,vector<N>,decltype(cmp)> pq(cmp);
+    pq.push({State{{}},h(State{{}})});
+    while(!pq.empty()){
+        auto cur=pq.top().s;pq.pop();
+        int r=cur.col.size();
+        if(r==8){
+            cout<<"BestFS 8-Queens solution (row:col)\n";
+            for(int i=0;i<8;i++) cout<<i<<" : "<<cur.col[i]<<"\n";
+            return 0;
+        }
+        for(int c=0;c<8;c++){
+            if(safe(cur.col,r,c)){
+                State ns=cur;
+                ns.col.push_back(c);
+                pq.push({ns,h(ns)});
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+22) BestFS Route-Finding
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Edge{int v;double w;};
+int main(){
+    int n,m; 
+    cout<<"Cities, Roads: ";
+    cin>>n>>m;
+    vector<vector<Edge>> g(n);
+    cout<<"u v dist (0-indexed):\n";
+    for(int i=0;i<m;i++){
+        int u,v;double w;cin>>u>>v>>w;
+        g[u].push_back({v,w});
+        g[v].push_back({u,w});
+    }
+    vector<pair<double,double>> coord(n);
+    cout<<"Enter x y for each city:\n";
+    for(int i=0;i<n;i++) cin>>coord[i].first>>coord[i].second;
+    int s,t; cout<<"Source target: ";cin>>s>>t;
+    auto h=[&](int u){
+        double dx=coord[u].first-coord[t].first;
+        double dy=coord[u].second-coord[t].second;
+        return sqrt(dx*dx+dy*dy);
+    };
+    struct Node{int u;double cost,heu;vector<int> path;};
+    auto cmp=[](const Node&a,const Node&b){return a.heu>b.heu;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    vector<bool> vis(n,false);
+    pq.push({s,0,h(s),{s}});
+    while(!pq.empty()){
+        auto cur=pq.top();pq.pop();
+        if(vis[cur.u]) continue;
+        vis[cur.u]=true;
+        if(cur.u==t){
+            cout<<"BestFS path:\n";
+            for(int v:cur.path) cout<<v<<" ";
+            cout<<"\nApprox cost: "<<cur.cost<<"\n";
+            return 0;
+        }
+        for(auto e:g[cur.u]){
+            if(!vis[e.v]){
+                auto path=cur.path;
+                path.push_back(e.v);
+                pq.push({e.v,cur.cost+e.w,h(e.v),path});
+            }
+        }
+    }
+    cout<<"No path\n";
+    return 0;
+}
+
+23) A* Water-Jar
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{int x,y;};
+int h(State s){ return min(abs(s.x-2),abs(s.y-2)); }
+bool valid(int x,int y){return x>=0&&x<=4&&y>=0&&y<=3;}
+
+int main(){
+    struct Node{State s;int g,h;};
+    auto cmp=[](const Node&a,const Node&b){return a.g+a.h>b.g+b.h;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    map<pair<int,int>,pair<int,int>> parent;
+    set<pair<int,int>> vis;
+    State start{0,0};
+    pq.push({start,0,h(start)});
+    parent[{0,0}]={-1,-1};
+    while(!pq.empty()){
+        auto cur=pq.top();pq.pop();
+        State s=cur.s;
+        if(vis.count({s.x,s.y})) continue;
+        vis.insert({s.x,s.y});
+        if(s.x==2 || s.y==2){
+            vector<pair<int,int>> path;
+            pair<int,int> p={s.x,s.y};
+            while(p.first!=-1){
+                path.push_back(p);
+                p=parent[p];
+            }
+            reverse(path.begin(),path.end());
+            cout<<"A* Water-Jar path:\n";
+            for(auto &st:path) cout<<"("<<st.first<<","<<st.second<<")\n";
+            return 0;
+        }
+        int x=s.x,y=s.y;
+        vector<State> nxt;
+        nxt.push_back({4,y}); nxt.push_back({x,3});
+        nxt.push_back({0,y}); nxt.push_back({x,0});
+        int pour=min(x,3-y);
+        nxt.push_back({x-pour,y+pour});
+        pour=min(y,4-x);
+        nxt.push_back({x+pour,y-pour});
+        for(auto ns:nxt){
+            if(!valid(ns.x,ns.y)) continue;
+            if(!vis.count({ns.x,ns.y})){
+                parent[{ns.x,ns.y}]={x,y};
+                pq.push({ns,cur.g+1,h(ns)});
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+24) A* 8-Puzzle
+#include <bits/stdc++.h>
+using namespace std;
+
+string goal="123456780";
+int h(const string &s){
+    int d=0;
+    for(int i=0;i<9;i++){
+        if(s[i]=='0') continue;
+        int v=s[i]-'1';
+        int r=i/3,c=i%3;
+        int gr=v/3,gc=v%3;
+        d+=abs(r-gr)+abs(c-gc);
+    }
+    return d;
+}
+vector<string> neighbors(const string &s){
+    vector<string> res;
+    int z=s.find('0');
+    int r=z/3,c=z%3;
+    int dr[4]={-1,1,0,0},dc[4]={0,0,-1,1};
+    for(int k=0;k<4;k++){
+        int nr=r+dr[k],nc=c+dc[k];
+        if(nr<0||nr>=3||nc<0||nc>=3) continue;
+        string t=s;
+        swap(t[z],t[nr*3+nc]);
+        res.push_back(t);
+    }
+    return res;
+}
+int main(){
+    string start; cin>>start;
+    struct Node{string s;int g,h;};
+    auto cmp=[](const Node&a,const Node&b){return a.g+a.h>b.g+b.h;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    map<string,string> parent;
+    map<string,int> bestg;
+    parent[start]="#"; bestg[start]=0;
+    pq.push({start,0,h(start)});
+    while(!pq.empty()){
+        auto cur=pq.top();pq.pop();
+        string s=cur.s;
+        if(s==goal){
+            vector<string> path; string t=s;
+            while(t!="#"){path.push_back(t);t=parent[t];}
+            reverse(path.begin(),path.end());
+            cout<<"A* 8-puzzle steps:\n";
+            for(auto &st:path){
+                cout<<st.substr(0,3)<<"\n"<<st.substr(3,3)<<"\n"<<st.substr(6,3)<<"\n\n";
+            }
+            return 0;
+        }
+        if(cur.g>bestg[s]) continue;
+        for(auto &n:neighbors(s)){
+            int ng=cur.g+1;
+            if(!bestg.count(n) || ng<bestg[n]){
+                bestg[n]=ng;
+                parent[n]=s;
+                pq.push({n,ng,h(n)});
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+25) A* Maze
+#include <bits/stdc++.h>
+using namespace std;
+
+int main(){
+    int n,m;cin>>n>>m;
+    vector<string> g(n);
+    for(int i=0;i<n;i++) cin>>g[i];
+    int sx,sy,gx,gy;cin>>sx>>sy>>gx>>gy;
+    auto h=[&](int x,int y){return abs(x-gx)+abs(y-gy);};
+    struct Node{int x,y,g,h;};
+    auto cmp=[](const Node&a,const Node&b){return a.g+a.h>b.g+b.h;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    vector<vector<int>> best(n,vector<int>(m,1e9));
+    vector<vector<pair<int,int>>> par(n,vector<pair<int,int>>(m,{-1,-1}));
+    pq.push({sx,sy,0,h(sx,sy)});
+    best[sx][sy]=0;
+    int dx[4]={-1,1,0,0},dy[4]={0,0,-1,1};
+    while(!pq.empty()){
+        auto cur=pq.top();pq.pop();
+        if(cur.x==gx && cur.y==gy){
+            vector<pair<int,int>> path;
+            int x=gx,y=gy;
+            while(x!=-1){
+                path.push_back({x,y});
+                auto p=par[x][y];x=p.first;y=p.second;
+            }
+            reverse(path.begin(),path.end());
+            cout<<"A* Maze path:\n";
+            for(auto &p:path) cout<<"("<<p.first<<","<<p.second<<")\n";
+            return 0;
+        }
+        if(cur.g>best[cur.x][cur.y]) continue;
+        for(int k=0;k<4;k++){
+            int nx=cur.x+dx[k],ny=cur.y+dy[k];
+            if(nx>=0&&ny>=0&&nx<n&&ny<m&&g[nx][ny]!='#'){
+                int ng=cur.g+1;
+                if(ng<best[nx][ny]){
+                    best[nx][ny]=ng;
+                    par[nx][ny]={cur.x,cur.y};
+                    pq.push({nx,ny,ng,h(nx,ny)});
+                }
+            }
+        }
+    }
+    cout<<"No path\n";
+    return 0;
+}
+
+26) A* Missionaries-Cannibals
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{int M,C,B;};
+bool valid(int M,int C){
+    int MR=3-M,CR=3-C;
+    if(M<0||C<0||M>3||C>3) return false;
+    if(M>0 && C>M) return false;
+    if(MR>0 && CR>MR) return false;
+    return true;
+}
+string key(State s){return to_string(s.M)+to_string(s.C)+to_string(s.B);}
+int h(State s){ return s.M + s.C; }
+
+int main(){
+    struct Node{State s;int g,h;};
+    auto cmp=[](const Node&a,const Node&b){return a.g+a.h>b.g+b.h;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    map<string,string> parent;
+    map<string,int> bestg;
+    State start{3,3,0},goal{0,0,1};
+    pq.push({start,0,h(start)});
+    parent[key(start)]="#"; bestg[key(start)]=0;
+    vector<pair<int,int>> moves={{1,0},{2,0},{0,1},{0,2},{1,1}};
+    while(!pq.empty()){
+        auto cur=pq.top();pq.pop();
+        State s=cur.s;
+        string sk=key(s);
+        if(s.M==goal.M && s.C==goal.C && s.B==goal.B){
+            vector<string> path; string t=sk;
+            while(t!="#"){path.push_back(t);t=parent[t];}
+            reverse(path.begin(),path.end());
+            cout<<"A* M-C states M,C,B:\n";
+            for(auto &st:path) cout<<st[0]<<" "<<st[1]<<" "<<st[2]<<"\n";
+            return 0;
+        }
+        if(cur.g>bestg[sk]) continue;
+        int sign=(s.B==0)?-1:1;
+        for(auto mv:moves){
+            State ns{s.M+sign*mv.first,s.C+sign*mv.second,1-s.B};
+            if(!valid(ns.M,ns.C)) continue;
+            string nk=key(ns);
+            int ng=cur.g+1;
+            if(!bestg.count(nk)||ng<bestg[nk]){
+                bestg[nk]=ng;
+                parent[nk]=sk;
+                pq.push({ns,ng,h(ns)});
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+27) A* 8-Queens
+#include <bits/stdc++.h>
+using namespace std;
+
+struct State{vector<int> col;};
+bool safe(const vector<int>&col,int r,int c){
+    for(int i=0;i<r;i++){
+        if(col[i]==c) return false;
+        if(abs(col[i]-c)==abs(i-r)) return false;
+    }
+    return true;
+}
+int h(const State&s){ return 8 - (int)s.col.size(); }
+
+int main(){
+    struct Node{State s;int g,h;};
+    auto cmp=[](const Node&a,const Node&b){return a.g+a.h>b.g+b.h;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    State start; start.col.clear();
+    pq.push({start,0,h(start)});
+    while(!pq.empty()){
+        auto cur=pq.top();pq.pop();
+        State s=cur.s;
+        int r=s.col.size();
+        if(r==8){
+            cout<<"A* 8-Queens solution (row:col)\n";
+            for(int i=0;i<8;i++) cout<<i<<" : "<<s.col[i]<<"\n";
+            return 0;
+        }
+        for(int c=0;c<8;c++){
+            if(safe(s.col,r,c)){
+                State ns=s; ns.col.push_back(c);
+                pq.push({ns,cur.g+1,h(ns)});
+            }
+        }
+    }
+    cout<<"No solution\n";
+    return 0;
+}
+
+28) A* Route-Finding
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Edge{int v;double w;};
+
+int main(){
+    int n,m;cin>>n>>m;
+    vector<vector<Edge>> g(n);
+    for(int i=0;i<m;i++){
+        int u,v;double w;cin>>u>>v>>w;
+        g[u].push_back({v,w});
+        g[v].push_back({u,w});
+    }
+    vector<pair<double,double>> coord(n);
+    for(int i=0;i<n;i++) cin>>coord[i].first>>coord[i].second;
+    int s,t;cin>>s>>t;
+    auto h=[&](int u){
+        double dx=coord[u].first-coord[t].first;
+        double dy=coord[u].second-coord[t].second;
+        return sqrt(dx*dx+dy*dy);
+    };
+    struct Node{int u;double g,h;vector<int> path;};
+    auto cmp=[](const Node&a,const Node&b){return a.g+a.h>b.g+b.h;};
+    priority_queue<Node,vector<Node>,decltype(cmp)> pq(cmp);
+    vector<double> best(n,1e18);
+    pq.push({s,0,h(s),{s}});
+    best[s]=0;
+    while(!pq.empty()){
+        auto cur=pq.top();pq.pop();
+        if(cur.u==t){
+            cout<<"A* path:\n";
+            for(int v:cur.path) cout<<v<<" ";
+            cout<<"\nCost: "<<cur.g<<"\n";
+            return 0;
+        }
+        if(cur.g>best[cur.u]) continue;
+        for(auto e:g[cur.u]){
+            double ng=cur.g+e.w;
+            if(ng<best[e.v]){
+                best[e.v]=ng;
+                auto path=cur.path;
+                path.push_back(e.v);
+                pq.push({e.v,ng,h(e.v),path});
+            }
+        }
+    }
+    cout<<"No path\n";
+    return 0;
+}
+
+29) 8-Queens CSP
+#include <bits/stdc++.h>
+using namespace std;
+
+int col[8];
+
+bool safe(int r,int c){
+    for(int i=0;i<r;i++){
+        if(col[i]==c) return false;
+        if(abs(col[i]-c)==abs(i-r)) return false;
+    }
+    return true;
+}
+bool solve(int r){
+    if(r==8) return true;
+    for(int c=0;c<8;c++){
+        if(safe(r,c)){
+            col[r]=c;
+            if(solve(r+1)) return true;
+        }
+    }
+    return false;
+}
+int main(){
+    if(solve(0)){
+        cout<<"8-Queens CSP solution (row:col)\n";
+        for(int i=0;i<8;i++) cout<<i<<" : "<<col[i]<<"\n";
+    }else cout<<"No solution\n";
+    return 0;
+}
+
+30) Cryptarithmetic CSP (SEND+MORE=MONEY)
+#include <bits/stdc++.h>
+using namespace std;
+
+int main(){
+    string letters="SENDMORY";
+    vector<int> d={0,1,2,3,4,5,6,7,8,9};
+    sort(d.begin(),d.end());
+    do{
+        map<char,int> mp;
+        for(int i=0;i<8;i++) mp[letters[i]]=d[i];
+        if(mp['S']==0 || mp['M']==0) continue;
+        int SEND=mp['S']*1000+mp['E']*100+mp['N']*10+mp['D'];
+        int MORE=mp['M']*1000+mp['O']*100+mp['R']*10+mp['E'];
+        int MONEY=mp['M']*10000+mp['O']*1000+mp['N']*100+mp['E']*10+mp['Y'];
+        if(SEND+MORE==MONEY){
+            cout<<"Solution:\n";
+            for(auto &p:mp) cout<<p.first<<"="<<p.second<<" ";
+            cout<<"\nSEND="<<SEND<<" MORE="<<MORE<<" MONEY="<<MONEY<<"\n";
+            return 0;
+        }
+    }while(next_permutation(d.begin(),d.end()));
+    cout<<"No solution\n";
+    return 0;
+}
+
+31) Graph-Colouring CSP
+#include <bits/stdc++.h>
+using namespace std;
+
+int nV,mE,k;
+vector<vector<int>> adj;
+vector<int> color;
+
+bool safe(int v,int c){
+    for(int u:adj[v]) if(color[u]==c) return false;
+    return true;
+}
+bool backtrack(int v){
+    if(v==nV) return true;
+    for(int c=1;c<=k;c++){
+        if(safe(v,c)){
+            color[v]=c;
+            if(backtrack(v+1)) return true;
+            color[v]=0;
+        }
+    }
+    return false;
+}
+
+int main(){
+    cin>>nV>>mE;
+    adj.assign(nV, {});
+    for(int i=0;i<mE;i++){
+        int u,v;cin>>u>>v;
+        adj[u].push_back(v);
+        adj[v].push_back(u);
+    }
+    cin>>k;
+    color.assign(nV,0);
+    if(backtrack(0)){
+        cout<<"Graph coloring:\n";
+        for(int i=0;i<nV;i++)
+            cout<<"Vertex "<<i<<" -> Color "<<color[i]<<"\n";
+    }else cout<<"No coloring with "<<k<<" colors\n";
+    return 0;
+}
